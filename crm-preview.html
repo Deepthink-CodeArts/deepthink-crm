@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeepThink CodeArts CRM — Preview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#080D1A;--surface:#0E1628;--elevated:#141E33;--overlay:#1A2540;
+    --border:rgba(255,255,255,0.07);--border-s:rgba(255,255,255,0.12);
+    --brand:#3B82F6;--brand-l:#60A5FA;--brand-dim:rgba(59,130,246,0.12);
+    --t1:#F1F5F9;--t2:#94A3B8;--t3:#475569;
+    --green:#10B981;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;--cyan:#06B6D4;
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:flex;overflow:hidden}
+  ::-webkit-scrollbar{width:3px;height:3px}
+  ::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:99px}
+
+  /* ── SIDEBAR ── */
+  .sidebar{width:220px;min-width:220px;height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0}
+  .logo{padding:18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+  .logo-icon{width:30px;height:30px;background:var(--brand);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:white;flex-shrink:0}
+  .logo-text{font-size:13px;font-weight:600;line-height:1.2}
+  .logo-sub{font-size:10px;color:var(--t3)}
+  nav{flex:1;overflow-y:auto;padding:10px 8px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;font-size:13px;cursor:pointer;transition:all .15s;color:var(--t2);position:relative}
+  .nav-item:hover{background:rgba(255,255,255,0.04);color:var(--t1)}
+  .nav-item.active{background:var(--brand-dim);color:var(--brand-l)}
+  .nav-item svg{width:15px;height:15px;flex-shrink:0}
+  .nav-dot{width:5px;height:5px;border-radius:50%;background:var(--brand);margin-left:auto}
+  .sidebar-bottom{padding:8px;border-top:1px solid var(--border)}
+
+  /* ── MAIN ── */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:rgba(8,13,26,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;flex-shrink:0}
+  .page-title{font-size:16px;font-weight:600}
+  .page-sub{font-size:11px;color:var(--t3);margin-top:1px}
+  .topbar-right{display:flex;align-items:center;gap:10px}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+  .btn-primary{background:var(--brand);color:white}
+  .btn-primary:hover{filter:brightness(1.1)}
+  .btn-secondary{background:var(--elevated);border:1px solid var(--border);color:var(--t2)}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--brand);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+  /* ── CONTENT ── */
+  .content{flex:1;overflow-y:auto;padding:24px}
+
+  /* ── CARDS ── */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;align-items:flex-start;justify-content:space-between}
+  .stat-label{font-size:11px;color:var(--t3);font-weight:500;margin-bottom:4px}
+  .stat-value{font-size:22px;font-weight:600;color:var(--t1)}
+  .stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .stat-icon svg{width:16px;height:16px}
+
+  /* ── TABLE ── */
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .filters{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .search-input{background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:7px 12px 7px 32px;font-size:13px;color:var(--t1);font-family:inherit;outline:none;width:220px;position:relative}
+  .search-wrap{position:relative}
+  .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--t3);pointer-events:none}
+  .filter-select{background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:7px 12px;font-size:12px;color:var(--t2);font-family:inherit;outline:none;cursor:pointer;appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;padding:10px 16px;font-size:11px;font-weight:500;color:var(--t3);background:var(--elevated);border-bottom:1px solid var(--border)}
+  td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(255,255,255,0.02)}
+  .contact-cell{display:flex;align-items:center;gap:10px}
+  .contact-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
+  .contact-name{font-weight:500;color:var(--t1);font-size:13px}
+  .contact-email{font-size:11px;color:var(--t3);margin-top:1px}
+
+  /* ── BADGE ── */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:500;border:1px solid}
+  .badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.8}
+  .badge-active{background:rgba(16,185,129,.12);color:#34d399;border-color:rgba(16,185,129,.25)}
+  .badge-inactive{background:rgba(239,68,68,.12);color:#f87171;border-color:rgba(239,68,68,.25)}
+  .badge-pending{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.25)}
+  .badge-high{background:rgba(16,185,129,.12);color:#34d399;border-color:rgba(16,185,129,.25)}
+  .badge-medium{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.25)}
+  .badge-low{background:rgba(100,116,139,.12);color:#94a3b8;border-color:rgba(100,116,139,.25)}
+  .badge-working{background:rgba(59,130,246,.12);color:#60a5fa;border-color:rgba(59,130,246,.25)}
+  .badge-won{background:rgba(16,185,129,.12);color:#34d399;border-color:rgba(16,185,129,.25)}
+  .badge-lost{background:rgba(239,68,68,.12);color:#f87171;border-color:rgba(239,68,68,.25)}
+  .badge-draft{background:rgba(100,116,139,.12);color:#94a3b8;border-color:rgba(100,116,139,.25)}
+  .badge-sent{background:rgba(59,130,246,.12);color:#60a5fa;border-color:rgba(59,130,246,.25)}
+  .badge-paid{background:rgba(16,185,129,.12);color:#34d399;border-color:rgba(16,185,129,.25)}
+  .badge-todo{background:rgba(100,116,139,.12);color:#94a3b8;border-color:rgba(100,116,139,.25)}
+  .badge-inprog{background:rgba(59,130,246,.12);color:#60a5fa;border-color:rgba(59,130,246,.25)}
+  .badge-done{background:rgba(16,185,129,.12);color:#34d399;border-color:rgba(16,185,129,.25)}
+
+  /* ── ROW ACTIONS ── */
+  .row-actions{display:flex;align-items:center;gap:4px;justify-content:flex-end;opacity:0;transition:.15s}
+  tr:hover .row-actions{opacity:1}
+  .icon-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;border:none;background:transparent;cursor:pointer;color:var(--t2);transition:.15s}
+  .icon-btn:hover{background:var(--elevated);color:var(--t1)}
+  .icon-btn.danger:hover{color:#f87171}
+  .icon-btn svg{width:12px;height:12px}
+
+  /* ── KANBAN / CARDS ── */
+  .project-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .project-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;cursor:pointer;transition:border-color .15s}
+  .project-card:hover{border-color:var(--border-s)}
+
+  /* ── BOTTOM GRID ── */
+  .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+  .widget{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}
+  .widget-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .widget-title{font-size:13px;font-weight:600}
+  .widget-link{font-size:11px;color:var(--brand-l);cursor:pointer}
+  .mini-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:var(--elevated);border:1px solid var(--border);margin-bottom:6px}
+  .mini-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .mini-title{font-size:12px;font-weight:500;color:var(--t1)}
+  .mini-sub{font-size:10px;color:var(--t3);margin-top:1px}
+  .mini-badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500;flex-shrink:0;margin-left:auto}
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+  .modal{background:var(--elevated);border:1px solid var(--border-s);border-radius:18px;width:100%;max-width:520px;animation:slideIn .2s ease-out}
+  @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+  .modal-title{font-size:14px;font-weight:600}
+  .modal-close{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:7px;border:none;background:transparent;cursor:pointer;color:var(--t3);font-size:16px}
+  .modal-body{padding:22px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-field{display:flex;flex-direction:column;gap:5px}
+  .form-field.full{grid-column:1/-1}
+  label{font-size:11px;font-weight:500;color:var(--t2)}
+  .input{background:var(--overlay);border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s}
+  .input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+  .input::placeholder{color:var(--t3)}
+  select.input{cursor:pointer;appearance:none}
+  textarea.input{resize:none}
+  .modal-footer{display:flex;gap:8px;justify-content:flex-end;padding:16px 22px;border-top:1px solid var(--border)}
+
+  /* ── INVOICE SPECIFIC ── */
+  .line-items-header{display:grid;grid-template-columns:1fr 80px 100px 90px 30px;gap:8px;font-size:11px;color:var(--t3);font-weight:500;margin-bottom:6px;padding:0 4px}
+  .line-item-row{display:grid;grid-template-columns:1fr 80px 100px 90px 30px;gap:8px;align-items:center;margin-bottom:6px}
+  .line-total{font-size:12px;font-weight:600;color:var(--brand-l);text-align:right;padding:4px}
+
+  /* ── TABS ── */
+  .tabs{display:flex;gap:2px;background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:20px;width:fit-content}
+  .tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;transition:.15s;color:var(--t2)}
+  .tab.active{background:var(--brand);color:white}
+
+  /* ── EMPTY ── */
+  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
+  .empty-icon{width:48px;height:48px;background:var(--elevated);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+  .empty-title{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:4px}
+  .empty-sub{font-size:12px;color:var(--t3);max-width:240px;line-height:1.5}
+
+  /* ── TASK BOARD ── */
+  .task-board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .task-col{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px}
+  .task-col-title{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .task-col-count{background:var(--elevated);border-radius:99px;padding:1px 7px;font-size:10px;color:var(--t3)}
+  .task-card{background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+  .task-card:hover{border-color:var(--border-s)}
+  .task-name{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:6px}
+  .task-meta{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t3);flex-wrap:wrap}
+  .urgency-dot{width:6px;height:6px;border-radius:50%}
+  .progress-bar{height:3px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:8px}
+  .progress-fill{height:100%;border-radius:99px;background:var(--brand);transition:width .3s}
+
+  /* Page visibility */
+  .page{display:none}
+  .page.visible{display:block}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">DT</div>
+    <div>
+      <div class="logo-text">DeepThink</div>
+      <div class="logo-sub">CodeArts CRM</div>
+    </div>
+  </div>
+  <nav id="nav">
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard<div class="nav-dot"></div>
+    </div>
+    <div class="nav-item" onclick="showPage('contacts',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Contacts
+    </div>
+    <div class="nav-item" onclick="showPage('companies',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Companies
+    </div>
+    <div class="nav-item" onclick="showPage('leads',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Leads
+    </div>
+    <div class="nav-item" onclick="showPage('deals',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Deals
+    </div>
+    <div class="nav-item" onclick="showPage('projects',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Projects
+    </div>
+    <div class="nav-item" onclick="showPage('tasks',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Tasks
+    </div>
+    <div class="nav-item" onclick="showPage('invoices',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Invoices
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="nav-item" onclick="showPage('settings',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93L4.93 19.07M4.93 4.93l14.14 14.14"/></svg>
+      Settings
+    </div>
+    <div class="nav-item" style="color:var(--t3)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div id="topbar-title-wrap">
+      <div class="page-title" id="topbar-title">Good morning, Admin 👋</div>
+      <div class="page-sub" id="topbar-sub">Here's what's happening across your workspace</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" id="topbar-btn" onclick="openModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="topbar-btn-label">Quick Add</span>
+      </button>
+      <div class="avatar">SA</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page visible" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div><div class="stat-label">Total Contacts</div><div class="stat-value">47</div><div style="font-size:11px;color:var(--t3);margin-top:4px">+3 this week</div></div>
+          <div class="stat-icon" style="background:rgba(59,130,246,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">Active Leads</div><div class="stat-value">12</div><div style="font-size:11px;color:var(--t3);margin-top:4px">4 high quality</div></div>
+          <div class="stat-icon" style="background:rgba(139,92,246,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">Open Deals</div><div class="stat-value">8</div><div style="font-size:11px;color:var(--t3);margin-top:4px">$142,500 pipeline</div></div>
+          <div class="stat-icon" style="background:rgba(16,185,129,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">Live Projects</div><div class="stat-value">5</div><div style="font-size:11px;color:var(--t3);margin-top:4px">2 due this month</div></div>
+          <div class="stat-icon" style="background:rgba(245,158,11,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div><div class="stat-label">Pending Tasks</div><div class="stat-value">23</div><div style="font-size:11px;color:var(--t3);margin-top:4px">6 overdue</div></div>
+          <div class="stat-icon" style="background:rgba(236,72,153,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">Invoices</div><div class="stat-value">19</div><div style="font-size:11px;color:var(--t3);margin-top:4px">3 overdue</div></div>
+          <div class="stat-icon" style="background:rgba(6,182,212,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">Revenue In</div><div class="stat-value">$68,200</div><div style="font-size:11px;color:#34d399;margin-top:4px">↑ 12% vs last month</div></div>
+          <div class="stat-icon" style="background:rgba(16,185,129,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">Total Pipeline</div><div class="stat-value">$142,500</div><div style="font-size:11px;color:var(--t3);margin-top:4px">Across 8 deals</div></div>
+          <div class="stat-icon" style="background:rgba(59,130,246,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        </div>
+      </div>
+      <div class="bottom-grid">
+        <div class="widget">
+          <div class="widget-header"><span class="widget-title">Pending Tasks</span><span class="widget-link">View all →</span></div>
+          <div class="mini-row"><div class="mini-dot" style="background:#EF4444"></div><div style="flex:1"><div class="mini-title">Prepare proposal for Acme</div><div class="mini-sub">⏰ Due Dec 18</div></div><div class="mini-badge badge badge-inactive">HIGH</div></div>
+          <div class="mini-row"><div class="mini-dot" style="background:#F59E0B"></div><div style="flex:1"><div class="mini-title">Follow up with Rafiq Ahmed</div><div class="mini-sub">⏰ Due Dec 20</div></div><div class="mini-badge badge badge-pending">MEDIUM</div></div>
+          <div class="mini-row"><div class="mini-dot" style="background:#F59E0B"></div><div style="flex:1"><div class="mini-title">Update project scope document</div><div class="mini-sub">⏰ Due Dec 22</div></div><div class="mini-badge badge badge-pending">MEDIUM</div></div>
+          <div class="mini-row"><div class="mini-dot" style="background:#64748B"></div><div style="flex:1"><div class="mini-title">Send invoice INV-2024-1092</div><div class="mini-sub">⏰ Due Dec 25</div></div><div class="mini-badge badge badge-low">LOW</div></div>
+        </div>
+        <div class="widget">
+          <div class="widget-header"><span class="widget-title">Recent Leads</span><span class="widget-link">View all →</span></div>
+          <div class="mini-row"><div class="mini-dot" style="background:#10B981"></div><div style="flex:1"><div class="mini-title">E-commerce Redesign</div><div class="mini-sub">Acme Digital</div></div><div class="mini-badge badge badge-high">HIGH</div></div>
+          <div class="mini-row"><div class="mini-dot" style="background:#F59E0B"></div><div style="flex:1"><div class="mini-title">Brand Identity Package</div><div class="mini-sub">StartUp Labs</div></div><div class="mini-badge badge badge-medium">MEDIUM</div></div>
+          <div class="mini-row"><div class="mini-dot" style="background:#F59E0B"></div><div style="flex:1"><div class="mini-title">Mobile App Development</div><div class="mini-sub">TechVenture Co.</div></div><div class="mini-badge badge badge-medium">MEDIUM</div></div>
+          <div class="mini-row"><div class="mini-dot" style="background:#64748B"></div><div style="flex:1"><div class="mini-title">SEO Audit & Strategy</div><div class="mini-sub">LocalBiz BD</div></div><div class="mini-badge badge badge-low">LOW</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="page" id="page-contacts">
+      <div class="filters">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" placeholder="Search contacts..." />
+        </div>
+        <select class="filter-select"><option>All Statuses</option><option>Active</option><option>Inactive</option><option>Pending</option></select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Contact</th><th>Company</th><th>Phone</th><th>Source</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><div class="contact-cell"><div class="contact-avatar" style="background:#3B82F6">RA</div><div><div class="contact-name">Rafiq Ahmed</div><div class="contact-email">rafiq@acme.com</div></div></div></td><td style="color:var(--t2);font-size:12px">🏢 Acme Digital<div style="font-size:11px;color:var(--t3)">CEO</div></td><td style="font-size:12px;color:var(--t2)">+880 1700 111111</td><td style="font-size:12px;color:var(--t3)">Referral</td><td><span class="badge badge-active"><span class="badge-dot"></span>ACTIVE</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button></div></td></tr>
+            <tr><td><div class="contact-cell"><div class="contact-avatar" style="background:#8B5CF6">SK</div><div><div class="contact-name">Sabrina Khan</div><div class="contact-email">sabrina@startup.io</div></div></div></td><td style="color:var(--t2);font-size:12px">🏢 StartUp Labs<div style="font-size:11px;color:var(--t3)">CTO</div></td><td style="font-size:12px;color:var(--t2)">+880 1800 222222</td><td style="font-size:12px;color:var(--t3)">LinkedIn</td><td><span class="badge badge-active"><span class="badge-dot"></span>ACTIVE</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+            <tr><td><div class="contact-cell"><div class="contact-avatar" style="background:#EC4899">TH</div><div><div class="contact-name">Tanvir Hossain</div><div class="contact-email">tanvir@techv.com</div></div></div></td><td style="color:var(--t2);font-size:12px">🏢 TechVenture<div style="font-size:11px;color:var(--t3)">Founder</div></td><td style="font-size:12px;color:var(--t2)">+880 1900 333333</td><td style="font-size:12px;color:var(--t3)">Cold Outreach</td><td><span class="badge badge-pending"><span class="badge-dot"></span>PENDING</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+            <tr><td><div class="contact-cell"><div class="contact-avatar" style="background:#10B981">NI</div><div><div class="contact-name">Nadia Islam</div><div class="contact-email">nadia@localbiz.bd</div></div></div></td><td style="color:var(--t2);font-size:12px">🏢 LocalBiz BD<div style="font-size:11px;color:var(--t3)">Marketing Head</div></td><td style="font-size:12px;color:var(--t2)">+880 1600 444444</td><td style="font-size:12px;color:var(--t3)">Website</td><td><span class="badge badge-inactive"><span class="badge-dot"></span>INACTIVE</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMPANIES -->
+    <div class="page" id="page-companies">
+      <div class="filters"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="search-input" placeholder="Search companies..." /></div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Company</th><th>Industry</th><th>Size</th><th>Contacts</th><th>Leads</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><div style="font-weight:500;color:var(--t1)">Acme Digital Agency</div><div style="font-size:11px;color:var(--t3)">Dhaka, Bangladesh</div></td><td style="font-size:12px;color:var(--t2)">Digital Marketing</td><td><span class="badge badge-medium">SMALL</span></td><td style="font-size:13px;color:var(--t1)">6</td><td style="font-size:13px;color:var(--t1)">3</td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+          <tr><td><div style="font-weight:500;color:var(--t1)">StartUp Labs</div><div style="font-size:11px;color:var(--t3)">Chittagong, Bangladesh</div></td><td style="font-size:12px;color:var(--t2)">SaaS / Tech</td><td><span class="badge badge-low">SOLO</span></td><td style="font-size:13px;color:var(--t1)">2</td><td style="font-size:13px;color:var(--t1)">2</td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+          <tr><td><div style="font-weight:500;color:var(--t1)">TechVenture Co.</div><div style="font-size:11px;color:var(--t3)">Dhaka, Bangladesh</div></td><td style="font-size:12px;color:var(--t2)">E-Commerce</td><td><span class="badge badge-medium">MEDIUM</span></td><td style="font-size:13px;color:var(--t1)">4</td><td style="font-size:13px;color:var(--t1)">1</td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="page" id="page-leads">
+      <div class="filters"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="search-input" placeholder="Search leads..." /></div><select class="filter-select"><option>All Quality</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Lead</th><th>Company</th><th>Probable Deals</th><th>Quality</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><div style="font-weight:500;color:var(--t1)">E-commerce Redesign</div><div style="font-size:11px;color:var(--t3)">Rafiq Ahmed</div></td><td style="font-size:12px;color:var(--t2)">Acme Digital</td><td><div style="font-size:12px"><span style="color:var(--t1)">2</span> <span style="color:var(--t3)">deals · $28,000 est.</span></div></td><td><span class="badge badge-high"><span class="badge-dot"></span>HIGH</span></td><td><span class="badge badge-working"><span class="badge-dot"></span>IN PROGRESS</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+          <tr><td><div style="font-weight:500;color:var(--t1)">Brand Identity Package</div><div style="font-size:11px;color:var(--t3)">Sabrina Khan</div></td><td style="font-size:12px;color:var(--t2)">StartUp Labs</td><td><div style="font-size:12px"><span style="color:var(--t1)">1</span> <span style="color:var(--t3)">deal · $8,500 est.</span></div></td><td><span class="badge badge-medium"><span class="badge-dot"></span>MEDIUM</span></td><td><span class="badge badge-active"><span class="badge-dot"></span>NEW</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- DEALS -->
+    <div class="page" id="page-deals">
+      <div class="filters"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="search-input" placeholder="Search deals..." /></div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Deal</th><th>Client</th><th>Total</th><th>Received</th><th>Due</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><div style="font-weight:500;color:var(--t1)">Acme Website Redesign</div><div style="font-size:11px;color:var(--t3)">3 projects linked</div></td><td style="font-size:12px;color:var(--t2)">Rafiq Ahmed<div style="font-size:11px;color:var(--t3)">Acme Digital</div></td><td style="font-size:13px;font-weight:600;color:var(--t1)">$18,000</td><td style="font-size:13px;color:#34d399">$12,000</td><td style="font-size:13px;color:#f87171">$6,000</td><td><span class="badge badge-active"><span class="badge-dot"></span>ACTIVE</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+          <tr><td><div style="font-weight:500;color:var(--t1)">Mobile App — TechVenture</div><div style="font-size:11px;color:var(--t3)">1 project linked</div></td><td style="font-size:12px;color:var(--t2)">Tanvir Hossain<div style="font-size:11px;color:var(--t3)">TechVenture</div></td><td style="font-size:13px;font-weight:600;color:var(--t1)">$35,000</td><td style="font-size:13px;color:#34d399">$17,500</td><td style="font-size:13px;color:#f87171">$17,500</td><td><span class="badge badge-active"><span class="badge-dot"></span>ACTIVE</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="page" id="page-projects">
+      <div class="project-grid">
+        <div class="project-card">
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#3B82F6"></div><div style="font-weight:600;font-size:14px">Acme Website Redesign</div></div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.5">Full redesign of Acme Digital's corporate website with new brand identity and CMS.</div>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--t3)"><span>📅 Dec 30, 2024</span><span>👥 3 members</span><span>✅ 8 tasks</span></div>
+          <div><div style="font-size:10px;color:var(--t3);margin-bottom:4px">Progress</div><div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div></div>
+          <select style="background:var(--elevated);border:1px solid var(--border);border-radius:9px;padding:6px 10px;font-size:12px;color:var(--t2);font-family:inherit;outline:none;width:100%;cursor:pointer">
+            <option>🟢 Active</option><option>🟡 On Hold</option><option>✅ Completed</option>
+          </select>
+        </div>
+        <div class="project-card">
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#3B82F6"></div><div style="font-weight:600;font-size:14px">TechVenture Mobile App</div></div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.5">React Native app for TechVenture's e-commerce platform — iOS and Android.</div>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--t3)"><span>📅 Jan 15, 2025</span><span>👥 4 members</span><span>✅ 14 tasks</span></div>
+          <div><div style="font-size:10px;color:var(--t3);margin-bottom:4px">Progress</div><div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div></div>
+          <select style="background:var(--elevated);border:1px solid var(--border);border-radius:9px;padding:6px 10px;font-size:12px;color:var(--t2);font-family:inherit;outline:none;width:100%;cursor:pointer">
+            <option>🟢 Active</option><option>🟡 On Hold</option><option>✅ Completed</option>
+          </select>
+        </div>
+        <div class="project-card">
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#10B981"></div><div style="font-weight:600;font-size:14px">StartUp Labs Branding</div></div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.5">Complete brand identity — logo, colors, typography, and brand guide.</div>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--t3)"><span>📅 Dec 15, 2024</span><span>👥 2 members</span><span>✅ 6 tasks</span></div>
+          <div><div style="font-size:10px;color:var(--t3);margin-bottom:4px">Progress</div><div class="progress-bar"><div class="progress-fill" style="width:100%;background:#10B981"></div></div></div>
+          <select style="background:var(--elevated);border:1px solid var(--border);border-radius:9px;padding:6px 10px;font-size:12px;color:var(--t2);font-family:inherit;outline:none;width:100%;cursor:pointer">
+            <option>🟢 Active</option><option>🟡 On Hold</option><option selected>✅ Completed</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="page" id="page-tasks">
+      <div class="task-board">
+        <div class="task-col">
+          <div class="task-col-title">📋 To Do <span class="task-col-count">5</span></div>
+          <div class="task-card"><div class="task-name">Prepare proposal for Acme</div><div class="task-meta"><span class="urgency-dot" style="background:#EF4444"></span><span>HIGH urgency</span><span>·</span><span>⏰ Dec 18</span></div></div>
+          <div class="task-card"><div class="task-name">Send invoice INV-2024-1092</div><div class="task-meta"><span class="urgency-dot" style="background:#64748B"></span><span>LOW urgency</span><span>·</span><span>⏰ Dec 25</span></div></div>
+          <div class="task-card"><div class="task-name">Review brand assets from designer</div><div class="task-meta"><span class="urgency-dot" style="background:#F59E0B"></span><span>MEDIUM urgency</span><span>·</span><span>⏰ Dec 22</span></div></div>
+        </div>
+        <div class="task-col">
+          <div class="task-col-title">⚡ In Progress <span class="task-col-count">3</span></div>
+          <div class="task-card"><div class="task-name">Build homepage mockup</div><div class="task-meta"><span class="urgency-dot" style="background:#EF4444"></span><span>HIGH urgency</span><span>·</span><span>👤 Tamim</span></div></div>
+          <div class="task-card"><div class="task-name">API integration for mobile app</div><div class="task-meta"><span class="urgency-dot" style="background:#F59E0B"></span><span>MEDIUM urgency</span><span>·</span><span>👤 Dev Team</span></div></div>
+        </div>
+        <div class="task-col">
+          <div class="task-col-title">✅ Done <span class="task-col-count">8</span></div>
+          <div class="task-card" style="opacity:.5"><div class="task-name">Kickoff call with Acme</div><div class="task-meta"><span>Completed Dec 10</span></div></div>
+          <div class="task-card" style="opacity:.5"><div class="task-name">Logo concepts delivered</div><div class="task-meta"><span>Completed Dec 12</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="page" id="page-invoices">
+      <div class="filters"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="search-input" placeholder="Search invoices..." /></div><select class="filter-select"><option>All Statuses</option><option>Draft</option><option>Sent</option><option>Paid</option><option>Overdue</option></select></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Invoice #</th><th>Client</th><th>Amount</th><th>Due Date</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brand-l)">INV-2024-1092</td><td style="font-size:12px;color:var(--t2)">Rafiq Ahmed<div style="font-size:11px;color:var(--t3)">Acme Digital</div></td><td style="font-size:13px;font-weight:600;color:var(--t1)">$6,000</td><td style="font-size:12px;color:var(--t3)">Dec 25, 2024</td><td><span class="badge badge-sent"><span class="badge-dot"></span>SENT</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brand-l)">INV-2024-1041</td><td style="font-size:12px;color:var(--t2)">Tanvir Hossain<div style="font-size:11px;color:var(--t3)">TechVenture</div></td><td style="font-size:13px;font-weight:600;color:var(--t1)">$17,500</td><td style="font-size:12px;color:var(--t3)">Jan 10, 2025</td><td><span class="badge badge-draft"><span class="badge-dot"></span>DRAFT</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brand-l)">INV-2024-0987</td><td style="font-size:12px;color:var(--t2)">Sabrina Khan<div style="font-size:11px;color:var(--t3)">StartUp Labs</div></td><td style="font-size:13px;font-weight:600;color:var(--t1)">$8,500</td><td style="font-size:12px;color:var(--t3)">Dec 10, 2024</td><td><span class="badge badge-paid"><span class="badge-dot"></span>PAID</span></td><td><div class="row-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div style="max-width:700px">
+        <div class="card" style="padding:22px;margin-bottom:16px">
+          <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:14px">Team Members</div>
+          <table style="width:100%">
+            <thead><tr><th style="text-align:left;padding:8px 0;font-size:11px;color:var(--t3);font-weight:500;border-bottom:1px solid var(--border)">Name</th><th style="text-align:left;padding:8px 0;font-size:11px;color:var(--t3);font-weight:500;border-bottom:1px solid var(--border)">Email</th><th style="text-align:left;padding:8px 0;font-size:11px;color:var(--t3);font-weight:500;border-bottom:1px solid var(--border)">Role</th><th style="text-align:left;padding:8px 0;font-size:11px;color:var(--t3);font-weight:500;border-bottom:1px solid var(--border)">Status</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:10px 0;font-size:13px;color:var(--t1)">Super Admin</td><td style="padding:10px 0;font-size:12px;color:var(--t2)">admin@deepthink.com</td><td style="padding:10px 0"><span class="badge badge-working">Super Admin</span></td><td style="padding:10px 0"><span class="badge badge-active"><span class="badge-dot"></span>Active</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card" style="padding:22px">
+          <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:14px">Roles & Permissions</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6">Roles define what each team member can do. Super Admin has full access. Custom roles can be created with module-wise CRUD permissions.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">New Contact</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field"><label>Full Name *</label><input class="input" placeholder="Jane Smith" /></div>
+        <div class="form-field"><label>Email</label><input class="input" type="email" placeholder="jane@company.com" /></div>
+        <div class="form-field"><label>Phone</label><input class="input" placeholder="+880 1700 000000" /></div>
+        <div class="form-field"><label>WhatsApp</label><input class="input" placeholder="+880 1700 000000" /></div>
+        <div class="form-field"><label>Source</label><input class="input" placeholder="Referral, LinkedIn..." /></div>
+        <div class="form-field"><label>Status</label><select class="input"><option>PENDING</option><option>ACTIVE</option><option>INACTIVE</option></select></div>
+        <div class="form-field"><label>Company</label><select class="input"><option value="">No company</option><option>Acme Digital Agency</option><option>StartUp Labs</option></select></div>
+        <div class="form-field"><label>Role in Company</label><input class="input" placeholder="CEO, Manager..." /></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal()">Create Contact</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const pages = {
+    dashboard:  { title: "Good morning, Admin 👋",  sub: "Here's what's happening across your workspace", btn: "Quick Add" },
+    contacts:   { title: "Contacts",    sub: "47 contacts",  btn: "Add Contact" },
+    companies:  { title: "Companies",   sub: "12 companies", btn: "Add Company" },
+    leads:      { title: "Leads",       sub: "12 active leads", btn: "New Lead" },
+    deals:      { title: "Deals",       sub: "8 open deals", btn: "New Deal" },
+    projects:   { title: "Projects",    sub: "5 live projects", btn: "New Project" },
+    tasks:      { title: "Tasks",       sub: "23 pending tasks", btn: "New Task" },
+    invoices:   { title: "Invoices",    sub: "19 invoices", btn: "New Invoice" },
+    settings:   { title: "Settings",    sub: "Users & roles", btn: "Add User" },
+  }
+
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'))
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+    document.getElementById('page-' + name).classList.add('visible')
+    el.classList.add('active')
+    const p = pages[name]
+    document.getElementById('topbar-title').textContent = p.title
+    document.getElementById('topbar-sub').textContent = p.sub
+    document.getElementById('topbar-btn-label').textContent = p.btn
+  }
+
+  function openModal() { document.getElementById('modal').style.display = 'flex' }
+  function closeModal() { document.getElementById('modal').style.display = 'none' }
+</script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+// prisma/schema.prisma
+// DeepThink CodeArts CRM — Full Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// AUTH & RBAC
+// ─────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  avatar        String?
+  roleId        String
+  role          Role      @relation(fields: [roleId], references: [id])
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  assignedTasks Task[]    @relation("TaskAssignees")
+  projectMembers ProjectMember[]
+  createdLeads  Lead[]    @relation("LeadCreatedBy")
+  createdDeals  Deal[]    @relation("DealCreatedBy")
+  meetings      Meeting[]
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  isSystem    Boolean      @default(false)
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
+  id       String  @id @default(cuid())
+  roleId   String
+  role     Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  module   Module
+  canCreate  Boolean @default(false)
+  canRead    Boolean @default(true)
+  canUpdate  Boolean @default(false)
+  canDelete  Boolean @default(false)
+
+  @@unique([roleId, module])
+}
+
+enum Module {
+  CONTACTS
+  COMPANIES
+  LEADS
+  DEALS
+  PROJECTS
+  TASKS
+  INVOICES
+  USERS
+  SETTINGS
+}
+
+// ─────────────────────────────────────────────
+// COMPANIES
+// ─────────────────────────────────────────────
+
+model Company {
+  id          String    @id @default(cuid())
+  name        String
+  size        CompanySize?
+  industry    String?
+  areaOfWork  String?
+  address     String?
+  website     String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  contacts    Contact[]
+  leads       Lead[]
+  deals       DealCompany[]
+}
+
+enum CompanySize {
+  SOLO
+  SMALL      // 2-10
+  MEDIUM     // 11-50
+  LARGE      // 51-200
+  ENTERPRISE // 200+
+}
+
+// ─────────────────────────────────────────────
+// CONTACTS
+// ─────────────────────────────────────────────
+
+model Contact {
+  id          String        @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  whatsapp    String?
+  source      String?
+  companyId   String?
+  company     Company?      @relation(fields: [companyId], references: [id])
+  roleInCompany String?
+  status      ContactStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  leadContacts LeadContact[]
+  dealContacts DealContact[]
+  tasks        Task[]        @relation("TaskContact")
+  meetings     MeetingContact[]
+}
+
+enum ContactStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+// ─────────────────────────────────────────────
+// LEADS
+// ─────────────────────────────────────────────
+
+model Lead {
+  id          String      @id @default(cuid())
+  title       String
+  companyId   String?
+  company     Company?    @relation(fields: [companyId], references: [id])
+  source      String?
+  description String?
+  quality     LeadQuality @default(MEDIUM)
+  status      LeadStatus  @default(NEW)
+  createdById String
+  createdBy   User        @relation("LeadCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  contacts     LeadContact[]
+  probableDeals ProbableDeal[]
+  tasks        Task[]       @relation("TaskLead")
+  meetings     Meeting[]    @relation("MeetingLead")
+}
+
+model LeadContact {
+  leadId    String
+  contactId String
+  lead      Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@id([leadId, contactId])
+}
+
+enum LeadQuality {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum LeadStatus {
+  NEW
+  IN_PROGRESS
+  QUALIFIED
+  UNQUALIFIED
+  CONVERTED
+}
+
+model ProbableDeal {
+  id          String      @id @default(cuid())
+  leadId      String
+  lead        Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  description String
+  amount      Decimal     @db.Decimal(12, 2)
+  complexity  Complexity  @default(MEDIUM)
+  stage       DealStage   @default(WORKING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  convertedDeal Deal?     @relation("ConvertedFromProbable")
+}
+
+enum Complexity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum DealStage {
+  WORKING
+  WON
+  LOST
+}
+
+// ─────────────────────────────────────────────
+// DEALS
+// ─────────────────────────────────────────────
+
+model Deal {
+  id                String    @id @default(cuid())
+  title             String
+  totalAmount       Decimal   @db.Decimal(12, 2)
+  amountReceived    Decimal   @db.Decimal(12, 2) @default(0)
+  status            DealStatus @default(ACTIVE)
+  notes             String?
+  probableDealId    String?   @unique
+  probableDeal      ProbableDeal? @relation("ConvertedFromProbable", fields: [probableDealId], references: [id])
+  createdById       String
+  createdBy         User      @relation("DealCreatedBy", fields: [createdById], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  contacts     DealContact[]
+  companies    DealCompany[]
+  payments     Payment[]
+  projects     Project[]
+  documents    Document[]
+  tasks        Task[]        @relation("TaskDeal")
+  meetings     Meeting[]     @relation("MeetingDeal")
+  invoices     Invoice[]
+}
+
+model DealContact {
+  dealId    String
+  contactId String
+  deal      Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  @@id([dealId, contactId])
+}
+
+model DealCompany {
+  dealId    String
+  companyId String
+  deal      Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@id([dealId, companyId])
+}
+
+enum DealStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(12, 2)
+  method    String?
+  reference String?
+  note      String?
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────
+// PROJECTS
+// ─────────────────────────────────────────────
+
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  plan        String?       // Scope / plan text
+  deadline    DateTime?
+  status      ProjectStatus @default(ACTIVE)
+  dealId      String?
+  deal        Deal?         @relation(fields: [dealId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  members     ProjectMember[]
+  tasks       Task[]         @relation("TaskProject")
+  documents   Document[]
+  credentials Credential[]
+}
+
+model ProjectMember {
+  id        String  @id @default(cuid())
+  projectId String
+  userId    String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String? // e.g., "Lead Developer", "Designer"
+
+  @@unique([projectId, userId])
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+// ─────────────────────────────────────────────
+// TASKS
+// ─────────────────────────────────────────────
+
+model Task {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  urgency     Urgency     @default(MEDIUM)
+  status      TaskStatus  @default(TODO)
+  deadline    DateTime?
+  // Linked entity (optional, only one at a time)
+  contactId   String?
+  contact     Contact?    @relation("TaskContact", fields: [contactId], references: [id])
+  leadId      String?
+  lead        Lead?       @relation("TaskLead", fields: [leadId], references: [id])
+  dealId      String?
+  deal        Deal?       @relation("TaskDeal", fields: [dealId], references: [id])
+  projectId   String?
+  project     Project?    @relation("TaskProject", fields: [projectId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  assignees   User[]      @relation("TaskAssignees")
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+// ─────────────────────────────────────────────
+// INVOICES
+// ─────────────────────────────────────────────
+
+model Invoice {
+  id          String        @id @default(cuid())
+  number      String        @unique
+  dealId      String?
+  deal        Deal?         @relation(fields: [dealId], references: [id])
+  clientName  String
+  clientEmail String?
+  notes       String?
+  status      InvoiceStatus @default(DRAFT)
+  dueDate     DateTime?
+  issuedAt    DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  lineItems   LineItem[]
+}
+
+model LineItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  total       Decimal  @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ─────────────────────────────────────────────
+// MEETINGS
+// ─────────────────────────────────────────────
+
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  scheduledAt DateTime
+  duration    Int?     // minutes
+  location    String?
+  meetUrl     String?
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  leadId      String?
+  lead        Lead?    @relation("MeetingLead", fields: [leadId], references: [id])
+  dealId      String?
+  deal        Deal?    @relation("MeetingDeal", fields: [dealId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendees   MeetingContact[]
+}
+
+model MeetingContact {
+  meetingId String
+  contactId String
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  @@id([meetingId, contactId])
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENTS & CREDENTIALS
+// ─────────────────────────────────────────────
+
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  size      Int?
+  type      String?
+  dealId    String?
+  deal      Deal?    @relation(fields: [dealId], references: [id])
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Credential {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label     String
+  username  String?
+  password  String?  // Should be encrypted in production
+  url       String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
