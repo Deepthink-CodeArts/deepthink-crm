@@ -19,7 +19,8 @@ export async function PATCH(
   })
 
   // Auto-create Deal when stage changes to WON
-  if (pd.stage === 'WON' && previous?.stage !== 'WON' && !pd.convertedDeal) {
+  const existingDeal = await prisma.deal.findFirst({ where: { probableDealId: pd.id } })
+  if (pd.stage === 'WON' && previous?.stage !== 'WON' && !existingDeal) {
     const lead = await prisma.lead.findUnique({
       where: { id: params.id },
       include: { contacts: true },
