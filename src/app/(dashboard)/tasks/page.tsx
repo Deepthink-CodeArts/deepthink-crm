@@ -2,8 +2,9 @@
 // src/app/(dashboard)/tasks/page.tsx
 import { useState, useEffect, useCallback } from 'react'
 import Header from '@/components/layout/Header'
-import { Badge, Modal, EmptyState, ConfirmDialog } from '@/components/ui'
+import { Badge, ConfirmDialog } from '@/components/ui'
 import { Plus, Clock, Trash2, Pencil, CheckCircle2, Circle, Loader } from 'lucide-react'
+import { TaskModal } from '@/components/modules/TaskModal'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/utils'
 
@@ -31,11 +32,6 @@ export default function TasksPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editTask, setEditTask] = useState<Task | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null)
-  const [saving, setSaving] = useState(false)
-
-  const [form, setForm] = useState({
-    title:'', description:'', urgency:'MEDIUM', status:'TODO', deadline:''
-  })
 
   const fetchTasks = useCallback(async () => {
     setLoading(true)
@@ -47,25 +43,10 @@ export default function TasksPage() {
 
   useEffect(() => { fetchTasks() }, [fetchTasks])
 
-  function openAdd() { setEditTask(null); setForm({ title:'', description:'', urgency:'MEDIUM', status:'TODO', deadline:'' }); setModalOpen(true) }
+  function openAdd() { setEditTask(null); setModalOpen(true) }
   function openEdit(t: Task) {
     setEditTask(t)
-    setForm({ title:t.title, description:t.description||'', urgency:t.urgency, status:t.status, deadline: t.deadline ? t.deadline.slice(0,10) : '' })
     setModalOpen(true)
-  }
-
-  async function handleSave() {
-    if (!form.title.trim()) return toast.error('Title required')
-    setSaving(true)
-    const url = editTask ? `/api/tasks/${editTask.id}` : '/api/tasks'
-    const res = await fetch(url, {
-      method: editTask ? 'PATCH' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, deadline: form.deadline || undefined }),
-    })
-    setSaving(false)
-    if (res.ok) { toast.success(editTask ? 'Updated' : 'Task created'); setModalOpen(false); fetchTasks() }
-    else toast.error('Error')
   }
 
   async function handleStatusChange(taskId: string, status: string) {
@@ -161,6 +142,17 @@ export default function TasksPage() {
                         )}
                       </div>
 
+                      {/* Display Assignees */}
+                      {task.assignees && task.assignees.length > 0 && (
+                        <div className="flex -space-x-1.5 mt-2.5">
+                          {task.assignees.map(user => (
+                            <div key={user.id} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" title={user.name} style={{ background: '#3B82F6', color: '#fff', border: '1px solid var(--bg-surface)' }}>
+                              {user.name.slice(0,2).toUpperCase()}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       {/* Move to next status */}
                       {task.status !== 'DONE' && (
                         <button
@@ -180,44 +172,12 @@ export default function TasksPage() {
         )}
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editTask ? 'Edit Task' : 'New Task'} size="sm">
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Title *</label>
-            <input className="input" placeholder="Task title" value={form.title} onChange={e => setForm(f=>({...f,title:e.target.value}))} />
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Description</label>
-            <textarea className="input resize-none" rows={2} value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Urgency</label>
-              <select className="select" value={form.urgency} onChange={e => setForm(f=>({...f,urgency:e.target.value}))}>
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Status</label>
-              <select className="select" value={form.status} onChange={e => setForm(f=>({...f,status:e.target.value}))}>
-                <option value="TODO">To Do</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="DONE">Done</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Deadline</label>
-            <input className="input" type="date" value={form.deadline} onChange={e => setForm(f=>({...f,deadline:e.target.value}))} />
-          </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <button onClick={() => setModalOpen(false)} className="btn-secondary text-sm">Cancel</button>
-            <button onClick={handleSave} disabled={saving} className="btn-primary text-sm">{saving ? 'Saving...' : editTask ? 'Update' : 'Create Task'}</button>
-          </div>
-        </div>
-      </Modal>
+      <TaskModal 
+        open={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        onSaved={fetchTasks} 
+        initialData={editTask} 
+      />
 
       <ConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} title="Delete Task" message={`Delete "${deleteTarget?.title}"?`} />
     </>

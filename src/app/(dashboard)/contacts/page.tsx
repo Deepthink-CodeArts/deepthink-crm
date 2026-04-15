@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import Header from '@/components/layout/Header'
 import { Badge, Modal, EmptyState, ConfirmDialog, SearchInput, Avatar } from '@/components/ui'
-import { Plus, Phone, Mail, MessageCircle, Building2, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
+import { Plus, Phone, Mail, MessageCircle, Building2, Pencil, Trash2, MoreHorizontal, ListTodo, CalendarPlus } from 'lucide-react'
+import { TaskModal } from '@/components/modules/TaskModal'
+import { MeetingModal } from '@/components/modules/MeetingModal'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/utils'
 
@@ -30,6 +32,10 @@ export default function ContactsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null)
   const [saving, setSaving] = useState(false)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
+
+  const [taskModalOpen, setTaskModalOpen] = useState(false)
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false)
+  const [actionEntity, setActionEntity] = useState<Contact | null>(null)
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '', whatsapp: '',
@@ -64,11 +70,14 @@ export default function ContactsPage() {
     setForm({
       name: c.name, email: c.email||'', phone: c.phone||'', whatsapp: c.whatsapp||'',
       source: c.source||'', companyId: c.company?.id||'', roleInCompany: c.roleInCompany||'',
-      status: c.status, notes: ''
+      status: c.status as any, notes: ''
     })
     setModalOpen(true)
     setOpenMenu(null)
   }
+
+  function openTask(c: Contact) { setActionEntity(c); setTaskModalOpen(true); }
+  function openMeeting(c: Contact) { setActionEntity(c); setMeetingModalOpen(true); }
 
   async function handleSave() {
     if (!form.name.trim()) return toast.error('Name is required')
@@ -203,6 +212,22 @@ export default function ContactsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
+                          onClick={() => openTask(c)}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:text-blue-500"
+                          style={{ color: 'var(--text-muted)' }}
+                          title="Create Task"
+                        >
+                          <ListTodo size={13} />
+                        </button>
+                        <button
+                          onClick={() => openMeeting(c)}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:text-blue-500"
+                          style={{ color: 'var(--text-muted)' }}
+                          title="Schedule Meeting"
+                        >
+                          <CalendarPlus size={13} />
+                        </button>
+                        <button
                           onClick={() => openEdit(c)}
                           className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
                           style={{ color: 'var(--text-muted)' }}
@@ -286,6 +311,19 @@ export default function ContactsPage() {
         onConfirm={handleDelete}
         title="Delete Contact"
         message={`Are you sure you want to delete "${deleteTarget?.name}"? This cannot be undone.`}
+      />
+
+      <TaskModal 
+        open={taskModalOpen} 
+        onClose={() => setTaskModalOpen(false)} 
+        onSaved={fetchContacts} 
+        prefill={{ contactId: actionEntity?.id }} 
+      />
+      <MeetingModal 
+        open={meetingModalOpen} 
+        onClose={() => setMeetingModalOpen(false)} 
+        onSaved={fetchContacts} 
+        prefill={{ contactId: actionEntity?.id }} 
       />
     </>
   )

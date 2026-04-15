@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import Header from '@/components/layout/Header'
 import { Badge, Modal, EmptyState, ConfirmDialog, SearchInput, Avatar } from '@/components/ui'
-import { Plus, ChevronDown, ChevronUp, DollarSign, Pencil, Trash2, Zap } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, DollarSign, Pencil, Trash2, Zap, ListTodo, CalendarPlus } from 'lucide-react'
+import { TaskModal } from '@/components/modules/TaskModal'
+import { MeetingModal } from '@/components/modules/MeetingModal'
 import { toast } from 'sonner'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
@@ -36,6 +38,10 @@ export default function LeadsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null)
   const [pdModal, setPdModal] = useState<Lead | null>(null)
   const [saving, setSaving] = useState(false)
+
+  const [taskModalOpen, setTaskModalOpen] = useState(false)
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false)
+  const [actionEntity, setActionEntity] = useState<Lead | null>(null)
 
   const [form, setForm] = useState({ title:'', companyId:'', source:'', description:'', quality:'MEDIUM', contactIds:[] as string[] })
   const [pdForm, setPdForm] = useState({ description:'', amount:'', complexity:'MEDIUM', stage:'WORKING' })
@@ -128,7 +134,7 @@ export default function LeadsPage() {
         ) : (
           <div className="space-y-3">
             {leads.map(lead => (
-              <div key={lead.id} className="card overflow-hidden">
+              <div key={lead.id} className="card overflow-hidden group">
                 <div
                   className="flex items-center gap-4 p-4 cursor-pointer"
                   style={{ background: expanded === lead.id ? 'var(--bg-elevated)' : undefined }}
@@ -154,6 +160,8 @@ export default function LeadsPage() {
                     <span className="text-xs font-medium" style={{ color: '#10B981' }}>
                       {formatCurrency(lead.probableDeals.reduce((s,d) => s + Number(d.amount), 0))}
                     </span>
+                    <button onClick={e => { e.stopPropagation(); setActionEntity(lead); setTaskModalOpen(true) }} className="w-7 h-7 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 hover:text-blue-500" style={{ color: 'var(--text-muted)' }} title="Create Task"><ListTodo size={13}/></button>
+                    <button onClick={e => { e.stopPropagation(); setActionEntity(lead); setMeetingModalOpen(true) }} className="w-7 h-7 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 hover:text-blue-500" style={{ color: 'var(--text-muted)' }} title="Schedule Meeting"><CalendarPlus size={13}/></button>
                     <button onClick={e => { e.stopPropagation(); openEdit(lead) }} className="w-7 h-7 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100" style={{ color: 'var(--text-muted)' }}><Pencil size={13}/></button>
                     <button onClick={e => { e.stopPropagation(); setDeleteTarget(lead) }} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: 'var(--text-muted)' }}><Trash2 size={13}/></button>
                     {expanded === lead.id ? <ChevronUp size={15} style={{ color: 'var(--text-muted)' }}/> : <ChevronDown size={15} style={{ color: 'var(--text-muted)' }}/>}
@@ -293,6 +301,19 @@ export default function LeadsPage() {
       </Modal>
 
       <ConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} title="Delete Lead" message={`Delete "${deleteTarget?.title}"?`} />
+
+      <TaskModal 
+        open={taskModalOpen} 
+        onClose={() => setTaskModalOpen(false)} 
+        onSaved={fetchLeads} 
+        prefill={{ leadId: actionEntity?.id }} 
+      />
+      <MeetingModal 
+        open={meetingModalOpen} 
+        onClose={() => setMeetingModalOpen(false)} 
+        onSaved={fetchLeads} 
+        prefill={{ leadId: actionEntity?.id }} 
+      />
     </>
   )
 }

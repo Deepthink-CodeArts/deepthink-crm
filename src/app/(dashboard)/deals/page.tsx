@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import Header from '@/components/layout/Header'
 import { Badge, Modal, EmptyState, ConfirmDialog, SearchInput } from '@/components/ui'
-import { Plus, DollarSign, Pencil, Trash2, ChevronDown, ChevronUp, CreditCard } from 'lucide-react'
+import { Plus, DollarSign, Pencil, Trash2, ChevronDown, ChevronUp, CreditCard, ListTodo, CalendarPlus } from 'lucide-react'
+import { TaskModal } from '@/components/modules/TaskModal'
+import { MeetingModal } from '@/components/modules/MeetingModal'
 import { toast } from 'sonner'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
@@ -26,6 +28,10 @@ export default function DealsPage() {
   const [payModal, setPayModal] = useState<Deal | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null)
   const [saving, setSaving] = useState(false)
+
+  const [taskModalOpen, setTaskModalOpen] = useState(false)
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false)
+  const [actionEntity, setActionEntity] = useState<Deal | null>(null)
 
   const [form, setForm] = useState({ title:'', totalAmount:'', notes:'' })
   const [payForm, setPayForm] = useState({ amount:'', method:'', reference:'', note:'' })
@@ -115,6 +121,8 @@ export default function DealsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={e => { e.stopPropagation(); setActionEntity(deal); setTaskModalOpen(true) }} className="w-7 h-7 flex items-center justify-center rounded-lg hover:text-blue-500 transition-colors" style={{ color: 'var(--text-muted)' }} title="Create Task"><ListTodo size={13}/></button>
+                  <button onClick={e => { e.stopPropagation(); setActionEntity(deal); setMeetingModalOpen(true) }} className="w-7 h-7 flex items-center justify-center rounded-lg hover:text-blue-500 transition-colors" style={{ color: 'var(--text-muted)' }} title="Schedule Meeting"><CalendarPlus size={13}/></button>
                   <button onClick={e => { e.stopPropagation(); setPayModal(deal) }} className="btn-secondary text-xs py-1 px-2.5">
                     <CreditCard size={12}/> Payment
                   </button>
@@ -228,6 +236,19 @@ export default function DealsPage() {
       </Modal>
 
       <ConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} title="Delete Deal" message={`Delete "${deleteTarget?.title}"?`} />
+
+      <TaskModal 
+        open={taskModalOpen} 
+        onClose={() => setTaskModalOpen(false)} 
+        onSaved={fetchDeals} 
+        prefill={{ dealId: actionEntity?.id }} 
+      />
+      <MeetingModal 
+        open={meetingModalOpen} 
+        onClose={() => setMeetingModalOpen(false)} 
+        onSaved={fetchDeals} 
+        prefill={{ dealId: actionEntity?.id }} 
+      />
     </>
   )
 }
