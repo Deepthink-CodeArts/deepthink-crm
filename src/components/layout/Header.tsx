@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { getInitials } from '@/lib/utils'
 import { Bell, Search } from 'lucide-react'
+import Link from 'next/link'
 
 interface HeaderProps {
   title: string
@@ -41,13 +42,15 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
 
         {/* Avatar */}
         {session?.user && (
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer"
-            style={{ background: 'var(--brand)', color: 'white' }}
-            title={session.user.name ?? ''}
-          >
-            {getInitials(session.user.name ?? 'U')}
-          </div>
+          <Link href="/profile">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer transition-transform hover:scale-105"
+              style={{ background: 'var(--brand)', color: 'white', border: '2px solid transparent' }}
+              title="View Profile"
+            >
+              {getInitials(session.user.name ?? 'U')}
+            </div>
+          </Link>
         )}
       </div>
     </header>
