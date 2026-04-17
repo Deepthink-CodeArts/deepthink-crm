@@ -21,7 +21,9 @@ export default function LoginPage() {
     })
     setLoading(false)
     if (res?.ok) {
+      toast.success('Logged in successfully')
       router.push('/dashboard')
+      router.refresh()
     } else {
       toast.error('Invalid email or password')
     }
@@ -113,10 +115,6 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-
-        <p className="text-center text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
-          Default: admin@deepthink.com / admin123
-        </p>
       </div>
     </div>
   )

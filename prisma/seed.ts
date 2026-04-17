@@ -55,13 +55,13 @@ async function main() {
   })
 
   // Create Super Admin User
-  const hashedPassword = await bcrypt.hash('admin123', 12)
+  const hashedPassword = await bcrypt.hash('deepxxavirxthinkxarts', 12)
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@deepthink.com' },
-    update: {},
+    where: { email: 'tamimazabir@gmail.com' },
+    update: { password: hashedPassword },
     create: {
-      name: 'Super Admin',
-      email: 'admin@deepthink.com',
+      name: 'Tamim',
+      email: 'tamimazabir@gmail.com',
       password: hashedPassword,
       roleId: superAdminRole.id,
     }
@@ -99,7 +99,7 @@ async function main() {
   })
 
   console.log('✅ Seed complete!')
-  console.log(`   👤 Admin: admin@deepthink.com / admin123`)
+  console.log(`   👤 Admin: tamimazabir@gmail.com`)
   console.log(`   🏢 Sample company: ${company.name}`)
   console.log(`   👤 Sample contact: ${contact.name}`)
 }
