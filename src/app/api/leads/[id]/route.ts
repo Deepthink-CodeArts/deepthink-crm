@@ -25,10 +25,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await req.json()
+  const { contactIds, ...data } = await req.json()
   const lead = await prisma.lead.update({
     where: { id: params.id },
-    data: { ...body, companyId: body.companyId || null },
+    data: { 
+      ...data, 
+      companyId: data.companyId || null,
+      ...(contactIds && {
+        contacts: {
+          deleteMany: {},
+          create: contactIds.map((id: string) => ({ contactId: id }))
+        }
+      })
+    },
     include: { company: { select: { id: true, name: true } }, probableDeals: true },
   })
   return NextResponse.json(lead)

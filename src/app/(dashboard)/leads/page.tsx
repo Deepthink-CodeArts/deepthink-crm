@@ -151,6 +151,7 @@ export default function LeadsPage() {
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       {lead.company && <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{lead.company.name}</span>}
+                      {lead.contacts && lead.contacts.length > 0 && <span className="text-xs" style={{ color: 'var(--text-muted)' }}>· {lead.contacts.map(c => c.contact.name).join(', ')}</span>}
                       {lead.source && <span className="text-xs" style={{ color: 'var(--text-muted)' }}>· {lead.source}</span>}
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>· {lead.probableDeals.length} deal{lead.probableDeals.length !== 1 ? 's' : ''}</span>
                     </div>
@@ -234,7 +235,7 @@ export default function LeadsPage() {
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Company</label>
               <select className="select" value={form.companyId} onChange={e => setForm(f=>({...f,companyId:e.target.value}))}>
-                <option value="">Select company</option>
+                <option value="">Select company (optional)</option>
                 {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
@@ -247,9 +248,26 @@ export default function LeadsPage() {
               </select>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Source</label>
-            <input className="input" placeholder="LinkedIn, Referral..." value={form.source} onChange={e => setForm(f=>({...f,source:e.target.value}))} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Contacts (Ctrl/Cmd to select multiple)</label>
+              <select 
+                multiple
+                className="select h-24 p-2" 
+                value={form.contactIds} 
+                onChange={e => {
+                  const options = Array.from(e.target.options)
+                  setForm(f=>({...f, contactIds: options.filter(o => o.selected).map(o => o.value)}))
+                }}
+              >
+                {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Hold corresponding key to select multiple</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Source</label>
+              <input className="input" placeholder="LinkedIn, Referral..." value={form.source} onChange={e => setForm(f=>({...f,source:e.target.value}))} />
+            </div>
           </div>
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Description</label>
