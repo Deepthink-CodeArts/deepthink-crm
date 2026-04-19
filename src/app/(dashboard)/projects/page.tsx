@@ -90,8 +90,11 @@ export default function ProjectsPage() {
               <div key={p.id} className="card p-5 group flex flex-col gap-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
+                    <div className="flex items-center gap-2 mb-0.5 min-w-0">
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ background: STATUS_COLOR[p.status as keyof typeof STATUS_COLOR] || '#64748B' }} />
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md shrink-0" style={{ background: 'var(--bg-overlay)', color: 'var(--text-muted)' }}>
+                        #{p.id.slice(-6).toUpperCase()}
+                      </span>
                       <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{p.title}</h3>
                     </div>
                     {p.deal && <p className="text-xs ml-4" style={{ color: 'var(--text-muted)' }}>↳ {p.deal.title}</p>}

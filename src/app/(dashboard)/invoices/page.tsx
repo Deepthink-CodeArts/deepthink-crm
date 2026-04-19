@@ -101,7 +101,12 @@ export default function InvoicesPage() {
                   return (
                     <tr key={inv.id} className="table-row group">
                       <td className="px-4 py-3">
-                        <span className="text-sm font-mono font-medium" style={{ color: 'var(--text-brand)' }}>{inv.number}</span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md w-fit" style={{ background: 'var(--bg-overlay)', color: 'var(--text-muted)' }}>
+                            #{inv.id.slice(-6).toUpperCase()}
+                          </span>
+                          <span className="text-sm font-mono font-medium" style={{ color: 'var(--text-brand)' }}>{inv.number}</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{inv.clientName}</p>

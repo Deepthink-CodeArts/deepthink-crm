@@ -3,8 +3,8 @@
 // All reusable base UI components
 
 import { cn, STATUS_COLORS } from '@/lib/utils'
-import { X, AlertCircle, Inbox } from 'lucide-react'
-import { useEffect } from 'react'
+import { X, AlertCircle, Inbox, ChevronDown, Check, Search } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
 
 // ─────────────────────────────────────────────
 // BADGE
@@ -168,8 +168,6 @@ export function Spinner({ size = 16 }: { size?: number }) {
 // ─────────────────────────────────────────────
 // SEARCH INPUT
 // ─────────────────────────────────────────────
-import { Search } from 'lucide-react'
-
 interface SearchInputProps {
   value: string
   onChange: (v: string) => void
@@ -238,3 +236,88 @@ export function Avatar({ name, size = 'md', color }: AvatarProps) {
     </div>
   )
 }
+
+// ─────────────────────────────────────────────
+// MULTISELECT
+// ─────────────────────────────────────────────
+interface MultiSelectOption {
+  value: string
+  label: string
+}
+
+interface MultiSelectProps {
+  options: MultiSelectOption[]
+  selected: string[]
+  onChange: (selected: string[]) => void
+  placeholder?: string
+}
+
+export function MultiSelect({ options, selected, onChange, placeholder = 'Select...' }: MultiSelectProps) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const toggle = (val: string) => {
+    if (selected.includes(val)) onChange(selected.filter(x => x !== val))
+    else onChange([...selected, val])
+  }
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div 
+        className="input flex flex-wrap items-center gap-1.5 cursor-pointer min-h-[42px] py-2" 
+        onClick={() => setOpen(!open)}
+      >
+        {selected.length === 0 ? (
+          <span style={{ color: 'var(--text-muted)' }} className="text-sm">{placeholder}</span>
+        ) : (
+          selected.map(val => {
+            const opt = options.find(o => o.value === val)
+            return (
+              <span key={val} className="text-[11px] px-2 py-0.5 rounded-md flex items-center gap-1" style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                {opt?.label ?? val}
+                <X size={12} className="cursor-pointer opacity-70 hover:opacity-100" onClick={(e) => { e.stopPropagation(); toggle(val) }} />
+              </span>
+            )
+          })
+        )}
+        <ChevronDown size={14} className="ml-auto shrink-0" style={{ color: 'var(--text-muted)' }} />
+      </div>
+
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-xl shadow-xl overflow-hidden py-1 max-h-60 overflow-y-auto" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)' }}>
+          {options.map(opt => {
+            const isSelected = selected.includes(opt.value)
+            return (
+              <div 
+                key={opt.value} 
+                className="px-3 py-2 text-sm cursor-pointer flex items-center justify-between transition-colors"
+                style={{ 
+                  color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  background: isSelected ? 'var(--bg-overlay)' : 'transparent'
+                }}
+                onClick={() => toggle(opt.value)}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-overlay)'}
+                onMouseLeave={e => e.currentTarget.style.background = isSelected ? 'var(--bg-overlay)' : 'transparent'}
+              >
+                {opt.label}
+                {isSelected && <Check size={14} style={{ color: 'var(--brand)' }} />}
+              </div>
+            )
+          })}
+          {options.length === 0 && <div className="p-3 text-xs text-center" style={{ color: 'var(--text-muted)' }}>No options</div>}
+        </div>
+      )}
+    </div>
+  )
+}
+

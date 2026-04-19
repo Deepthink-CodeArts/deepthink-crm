@@ -2,7 +2,7 @@
 // src/app/(dashboard)/leads/page.tsx
 import { useState, useEffect, useCallback } from 'react'
 import Header from '@/components/layout/Header'
-import { Badge, Modal, EmptyState, ConfirmDialog, SearchInput, Avatar } from '@/components/ui'
+import { Badge, Modal, EmptyState, ConfirmDialog, SearchInput, Avatar, MultiSelect } from '@/components/ui'
 import { Plus, ChevronDown, ChevronUp, DollarSign, Pencil, Trash2, Zap, ListTodo, CalendarPlus } from 'lucide-react'
 import { TaskModal } from '@/components/modules/TaskModal'
 import { MeetingModal } from '@/components/modules/MeetingModal'
@@ -145,7 +145,12 @@ export default function LeadsPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{lead.title}</h3>
+                      <h3 className="text-sm font-semibold flex items-center" style={{ color: 'var(--text-primary)' }}>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md mr-2 text-muted-foreground" style={{ background: 'var(--bg-overlay)', color: 'var(--text-muted)' }}>
+                          #{lead.id.slice(-6).toUpperCase()}
+                        </span>
+                        {lead.title}
+                      </h3>
                       <Badge status={lead.quality} label={lead.quality} />
                       <Badge status={lead.status as any} label={lead.status.replace('_',' ')} />
                     </div>
@@ -250,19 +255,13 @@ export default function LeadsPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Contacts (Ctrl/Cmd to select multiple)</label>
-              <select 
-                multiple
-                className="select h-24 p-2" 
-                value={form.contactIds} 
-                onChange={e => {
-                  const options = Array.from(e.target.options)
-                  setForm(f=>({...f, contactIds: options.filter(o => o.selected).map(o => o.value)}))
-                }}
-              >
-                {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Hold corresponding key to select multiple</p>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Contacts</label>
+              <MultiSelect
+                options={contacts.map(c => ({ value: c.id, label: c.name }))}
+                selected={form.contactIds}
+                onChange={selected => setForm(f => ({...f, contactIds: selected}))}
+                placeholder="Select contacts..."
+              />
             </div>
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Source</label>

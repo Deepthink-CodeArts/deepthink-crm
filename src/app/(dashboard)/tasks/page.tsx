@@ -109,7 +109,12 @@ export default function TasksPage() {
                       style={{ borderLeft: `3px solid ${URGENCY_COLOR[task.urgency]}` }}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium leading-snug" style={{ color: 'var(--text-primary)' }}>{task.title}</p>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[9px] px-1 py-0.5 rounded mr-1.5 align-middle" style={{ background: 'var(--bg-overlay)', color: 'var(--text-muted)' }}>
+                            #{task.id.slice(-6).toUpperCase()}
+                          </span>
+                          <span className="text-sm font-medium leading-snug align-middle" style={{ color: 'var(--text-primary)' }}>{task.title}</span>
+                        </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                           <button onClick={() => openEdit(task)} className="w-6 h-6 flex items-center justify-center rounded" style={{ color: 'var(--text-muted)' }}><Pencil size={11}/></button>
                           <button onClick={() => setDeleteTarget(task)} className="w-6 h-6 flex items-center justify-center rounded" style={{ color: 'var(--text-muted)' }}><Trash2 size={11}/></button>

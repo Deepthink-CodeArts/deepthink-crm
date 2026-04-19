@@ -100,7 +100,12 @@ export default function CompaniesPage() {
                   <div className="flex items-center gap-3">
                     <Avatar name={c.name} size="md" />
                     <div>
-                      <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{c.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: 'var(--bg-overlay)', color: 'var(--text-muted)' }}>
+                          #{c.id.slice(-6).toUpperCase()}
+                        </span>
+                        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{c.name}</h3>
+                      </div>
                       {c.industry && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{c.industry}</p>}
                     </div>
                   </div>

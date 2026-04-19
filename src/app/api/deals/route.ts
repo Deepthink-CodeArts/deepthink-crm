@@ -10,6 +10,22 @@ const DealSchema = z.object({
   contactIds: z.array(z.string()).optional(),
   companyIds: z.array(z.string()).optional(),
   notes: z.string().optional(),
+  business: z.string().optional().nullable(),
+  spokespersons: z.string().optional().nullable(),
+  understanding: z.string().optional().nullable(),
+  opportunity: z.string().optional().nullable(),
+  friendliness: z.string().optional().nullable(),
+  finance: z.string().optional().nullable(),
+  servicePain: z.string().optional().nullable(),
+  featurePain: z.string().optional().nullable(),
+  timePain: z.string().optional().nullable(),
+  paymentDelayPain: z.string().optional().nullable(),
+  trustLevel: z.string().optional().nullable(),
+  paymentBehavior: z.string().optional().nullable(),
+  workStyle: z.string().optional().nullable(),
+  priority: z.string().optional().nullable(),
+  lastContact: z.string().transform(str => str ? new Date(str) : null).optional().nullable(),
+  nextFollowUp: z.string().transform(str => str ? new Date(str) : null).optional().nullable(),
 })
 
 export async function GET(req: NextRequest) {

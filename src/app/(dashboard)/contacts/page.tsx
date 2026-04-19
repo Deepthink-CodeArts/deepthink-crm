@@ -165,7 +165,12 @@ export default function ContactsPage() {
                       <div className="flex items-center gap-3">
                         <Avatar name={c.name} size="sm" />
                         <div>
-                          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{c.name}</p>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: 'var(--bg-overlay)', color: 'var(--text-muted)' }}>
+                              #{c.id.slice(-6).toUpperCase()}
+                            </span>
+                            <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{c.name}</p>
+                          </div>
                           {c.roleInCompany && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{c.roleInCompany}</p>}
                         </div>
                       </div>

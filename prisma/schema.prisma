@@ -225,6 +225,23 @@ model Deal {
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
 
+  business          String?
+  spokespersons     String?
+  understanding     String?
+  opportunity       String?
+  friendliness      String?
+  finance           String?
+  servicePain       String?
+  featurePain       String?
+  timePain          String?
+  paymentDelayPain  String?
+  trustLevel        String?
+  paymentBehavior   String?
+  workStyle         String?
+  priority          String?
+  lastContact       DateTime?
+  nextFollowUp      DateTime?
+
   contacts     DealContact[]
   companies    DealCompany[]
   payments     Payment[]

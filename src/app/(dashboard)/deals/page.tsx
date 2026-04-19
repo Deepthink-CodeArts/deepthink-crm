@@ -25,6 +25,7 @@ export default function DealsPage() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editDeal, setEditDeal] = useState<Deal | null>(null)
   const [payModal, setPayModal] = useState<Deal | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null)
   const [saving, setSaving] = useState(false)
@@ -33,7 +34,12 @@ export default function DealsPage() {
   const [meetingModalOpen, setMeetingModalOpen] = useState(false)
   const [actionEntity, setActionEntity] = useState<Deal | null>(null)
 
-  const [form, setForm] = useState({ title:'', totalAmount:'', notes:'' })
+  const [form, setForm] = useState({ 
+    title:'', totalAmount:'', notes:'',
+    business:'', spokespersons:'', understanding:'', opportunity:'', friendliness:'', finance:'',
+    servicePain:'', featurePain:'', timePain:'', paymentDelayPain:'', trustLevel:'', paymentBehavior:'',
+    workStyle:'', priority:'', lastContact:'', nextFollowUp:''
+  })
   const [payForm, setPayForm] = useState({ amount:'', method:'', reference:'', note:'' })
 
   const fetchDeals = useCallback(async () => {
@@ -46,16 +52,59 @@ export default function DealsPage() {
 
   useEffect(() => { fetchDeals() }, [fetchDeals])
 
+  function openAdd() {
+    setEditDeal(null)
+    setForm({
+      title:'', totalAmount:'', notes:'', business:'', spokespersons:'', understanding:'', opportunity:'', friendliness:'', finance:'',
+      servicePain:'', featurePain:'', timePain:'', paymentDelayPain:'', trustLevel:'', paymentBehavior:'', workStyle:'', priority:'', lastContact:'', nextFollowUp:''
+    })
+    setModalOpen(true)
+  }
+
+  function openEdit(d: any) {
+    setEditDeal(d)
+    setForm({
+      title: d.title,
+      totalAmount: d.totalAmount.toString(),
+      notes: d.notes || '',
+      business: d.business || '',
+      spokespersons: d.spokespersons || '',
+      understanding: d.understanding || '',
+      opportunity: d.opportunity || '',
+      friendliness: d.friendliness || '',
+      finance: d.finance || '',
+      servicePain: d.servicePain || '',
+      featurePain: d.featurePain || '',
+      timePain: d.timePain || '',
+      paymentDelayPain: d.paymentDelayPain || '',
+      trustLevel: d.trustLevel || '',
+      paymentBehavior: d.paymentBehavior || '',
+      workStyle: d.workStyle || '',
+      priority: d.priority || '',
+      lastContact: d.lastContact ? new Date(d.lastContact).toISOString().slice(0, 16) : '',
+      nextFollowUp: d.nextFollowUp ? new Date(d.nextFollowUp).toISOString().slice(0, 16) : ''
+    })
+    setModalOpen(true)
+  }
+
   async function handleSave() {
     if (!form.title || !form.totalAmount) return toast.error('Fill required fields')
     setSaving(true)
-    const res = await fetch('/api/deals', {
-      method: 'POST',
+    const url = editDeal ? `/api/deals/${editDeal.id}` : '/api/deals'
+    const res = await fetch(url, {
+      method: editDeal ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...form, totalAmount: parseFloat(form.totalAmount) }),
     })
     setSaving(false)
-    if (res.ok) { toast.success('Deal created'); setModalOpen(false); setForm({ title:'', totalAmount:'', notes:'' }); fetchDeals() }
+    if (res.ok) { 
+      toast.success(editDeal ? 'Deal updated' : 'Deal created'); setModalOpen(false); 
+      setForm({
+        title:'', totalAmount:'', notes:'', business:'', spokespersons:'', understanding:'', opportunity:'', friendliness:'', finance:'',
+        servicePain:'', featurePain:'', timePain:'', paymentDelayPain:'', trustLevel:'', paymentBehavior:'', workStyle:'', priority:'', lastContact:'', nextFollowUp:''
+      }); 
+      fetchDeals() 
+    }
     else toast.error('Error')
   }
 
@@ -81,13 +130,13 @@ export default function DealsPage() {
       <Header
         title="Deals"
         subtitle={`${deals.length} deal${deals.length !== 1 ? 's' : ''}`}
-        actions={<button onClick={() => setModalOpen(true)} className="btn-primary text-sm"><Plus size={15}/>New Deal</button>}
+        actions={<button onClick={openAdd} className="btn-primary text-sm"><Plus size={15}/>New Deal</button>}
       />
       <div className="p-6 space-y-3">
         {loading ? (
           <div className="flex justify-center py-20"><div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/></div>
         ) : deals.length === 0 ? (
-          <EmptyState title="No deals yet" description="Deals are created when a Lead's probable deal is marked Won, or manually here" action={<button onClick={() => setModalOpen(true)} className="btn-primary text-sm"><Plus size={14}/>New Deal</button>}/>
+          <EmptyState title="No deals yet" description="Deals are created when a Lead's probable deal is marked Won, or manually here" action={<button onClick={openAdd} className="btn-primary text-sm"><Plus size={14}/>New Deal</button>}/>
         ) : deals.map(deal => {
           const due = Number(deal.totalAmount) - Number(deal.amountReceived)
           const pct = deal.totalAmount > 0 ? (Number(deal.amountReceived) / Number(deal.totalAmount)) * 100 : 0
@@ -100,7 +149,12 @@ export default function DealsPage() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{deal.title}</h3>
+                    <h3 className="text-sm font-semibold flex items-center" style={{ color: 'var(--text-primary)' }}>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md mr-2 text-muted-foreground" style={{ background: 'var(--bg-overlay)', color: 'var(--text-muted)' }}>
+                        #{deal.id.slice(-6).toUpperCase()}
+                      </span>
+                      {deal.title}
+                    </h3>
                     <Badge status={deal.status as any} />
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 flex-wrap">
@@ -126,6 +180,7 @@ export default function DealsPage() {
                   <button onClick={e => { e.stopPropagation(); setPayModal(deal) }} className="btn-secondary text-xs py-1 px-2.5">
                     <CreditCard size={12}/> Payment
                   </button>
+                  <button onClick={e => { e.stopPropagation(); openEdit(deal) }} className="w-7 h-7 flex items-center justify-center rounded-lg hover:text-blue-500 transition-colors" style={{ color: 'var(--text-muted)' }} title="Edit Deal"><Pencil size={13}/></button>
                   <button onClick={e => { e.stopPropagation(); setDeleteTarget(deal) }} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: 'var(--text-muted)' }}><Trash2 size={13}/></button>
                   {expanded === deal.id ? <ChevronUp size={15} style={{ color: 'var(--text-muted)' }}/> : <ChevronDown size={15} style={{ color: 'var(--text-muted)' }}/>}
                 </div>
@@ -190,25 +245,130 @@ export default function DealsPage() {
         })}
       </div>
 
-      {/* New Deal Modal */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New Deal" size="sm">
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Title *</label>
-            <input className="input" placeholder="Deal title" value={form.title} onChange={e => setForm(f=>({...f,title:e.target.value}))} />
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Deal Configuration" size="lg">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+          {/* Basics */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Title *</label>
+              <input className="input" placeholder="Deal title" value={form.title} onChange={e => setForm(f=>({...f,title:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Total Amount *</label>
+              <input className="input" type="number" placeholder="10000" value={form.totalAmount} onChange={e => setForm(f=>({...f,totalAmount:e.target.value}))} />
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Total Amount *</label>
-            <input className="input" type="number" placeholder="10000" value={form.totalAmount} onChange={e => setForm(f=>({...f,totalAmount:e.target.value}))} />
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Business Type</label>
+              <input className="input" placeholder="e.g. Agency, SaaS" value={form.business} onChange={e => setForm(f=>({...f,business:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Spokespersons</label>
+              <input className="input" placeholder="Name(s)" value={form.spokespersons} onChange={e => setForm(f=>({...f,spokespersons:e.target.value}))} />
+            </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Understanding</label>
+              <input className="input" placeholder="Client technical understanding" value={form.understanding} onChange={e => setForm(f=>({...f,understanding:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Opportunity Scale</label>
+              <input className="input" placeholder="e.g. High potential for upsell" value={form.opportunity} onChange={e => setForm(f=>({...f,opportunity:e.target.value}))} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Friendliness</label>
+              <input className="input" placeholder="e.g. Very Friendly, Strict" value={form.friendliness} onChange={e => setForm(f=>({...f,friendliness:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Finance Source</label>
+              <input className="input" placeholder="e.g. Seed Funded, Bootstrapped" value={form.finance} onChange={e => setForm(f=>({...f,finance:e.target.value}))} />
+            </div>
+          </div>
+
+          <hr className="border-t border-dashed" style={{ borderColor: 'var(--border)' }} />
+
+          <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Pains & Behaviors</p>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Service Pain</label>
+              <input className="input" placeholder="..." value={form.servicePain} onChange={e => setForm(f=>({...f,servicePain:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Feature Pain</label>
+              <input className="input" placeholder="..." value={form.featurePain} onChange={e => setForm(f=>({...f,featurePain:e.target.value}))} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Time Pain</label>
+              <input className="input" placeholder="..." value={form.timePain} onChange={e => setForm(f=>({...f,timePain:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Payment Delay Pain</label>
+              <input className="input" placeholder="..." value={form.paymentDelayPain} onChange={e => setForm(f=>({...f,paymentDelayPain:e.target.value}))} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Trust Level</label>
+              <input className="input" placeholder="e.g. High, Medium, Skeptical" value={form.trustLevel} onChange={e => setForm(f=>({...f,trustLevel:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Payment Behavior</label>
+              <input className="input" placeholder="e.g. On-time, Delayed" value={form.paymentBehavior} onChange={e => setForm(f=>({...f,paymentBehavior:e.target.value}))} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Work Style</label>
+              <input className="input" placeholder="e.g. Agile, Waterfall, Ad-hoc" value={form.workStyle} onChange={e => setForm(f=>({...f,workStyle:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Priority</label>
+              <select className="select" value={form.priority} onChange={e => setForm(f=>({...f,priority:e.target.value}))}>
+                <option value="">Select...</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <hr className="border-t border-dashed" style={{ borderColor: 'var(--border)' }} />
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Last Contact</label>
+              <input type="datetime-local" className="input" value={form.lastContact} onChange={e => setForm(f=>({...f,lastContact:e.target.value}))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Next Follow-Up</label>
+              <input type="datetime-local" className="input" value={form.nextFollowUp} onChange={e => setForm(f=>({...f,nextFollowUp:e.target.value}))} />
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Notes</label>
-            <textarea className="input resize-none" rows={2} value={form.notes} onChange={e => setForm(f=>({...f,notes:e.target.value}))} />
+            <textarea className="input resize-none" rows={3} value={form.notes} onChange={e => setForm(f=>({...f,notes:e.target.value}))} />
           </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <button onClick={() => setModalOpen(false)} className="btn-secondary text-sm">Cancel</button>
-            <button onClick={handleSave} disabled={saving} className="btn-primary text-sm">{saving ? 'Saving...' : 'Create Deal'}</button>
-          </div>
+
+        </div>
+        
+        <div className="flex gap-2 justify-end pt-4 mt-4" style={{ borderTop: '1px solid var(--border)' }}>
+          <button onClick={() => setModalOpen(false)} className="btn-secondary text-sm">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="btn-primary text-sm">{saving ? 'Saving...' : editDeal ? 'Update Deal' : 'Create Deal'}</button>
         </div>
       </Modal>
 

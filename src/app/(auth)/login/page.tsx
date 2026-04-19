@@ -20,10 +20,9 @@ export default function LoginPage() {
       email, password, redirect: false
     })
     setLoading(false)
-    if (res?.ok) {
+    if (res && !res.error) {
       toast.success('Logged in successfully')
-      router.push('/dashboard')
-      router.refresh()
+      window.location.href = '/dashboard'
     } else {
       toast.error('Invalid email or password')
     }
