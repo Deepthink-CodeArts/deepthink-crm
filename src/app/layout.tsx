@@ -6,6 +6,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'DeepThink CodeArts CRM',
   description: 'Internal CRM, Task Management & Invoice System',
+  icons: {
+    icon: '/images/deepthink-logo.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

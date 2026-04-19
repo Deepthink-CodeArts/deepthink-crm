@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Zap, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -42,15 +42,11 @@ export default function LoginPage() {
       <div className="w-full max-w-sm relative">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'var(--brand)' }}
-          >
-            <Zap size={22} color="white" />
-          </div>
-          <h1 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-            DeepThink CodeArts
-          </h1>
+          <img 
+            src="/images/deepthink-logo-text.png" 
+            alt="DeepThink CodeArts" 
+            className="h-16 w-auto mx-auto mb-2"
+          />
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             Sign in to your workspace
           </p>

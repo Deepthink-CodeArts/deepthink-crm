@@ -33,17 +33,12 @@ export default function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div className="px-5 py-5 flex items-center gap-3" style={{ borderBottom: '1px solid var(--border)' }}>
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-          style={{ background: 'var(--brand)' }}
-        >
-          DT
-        </div>
-        <div>
-          <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>DeepThink</div>
-          <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>CodeArts CRM</div>
-        </div>
+      <div className="px-5 py-6 flex items-center justify-center" style={{ borderBottom: '1px solid var(--border)' }}>
+        <img 
+          src="/images/deepthink-logo.png" 
+          alt="DeepThink Logo" 
+          className="h-10 w-auto"
+        />
       </div>
 
       {/* Navigation */}
