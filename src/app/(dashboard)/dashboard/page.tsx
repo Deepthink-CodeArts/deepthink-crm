@@ -47,7 +47,7 @@ export default async function DashboardPage() {
   return (
     <>
       <Header
-        title={`Good ${getGreeting()}, ${session?.user.name?.split(' ')[0]} 👋`}
+        title={`Good ${getGreeting()}, ${session?.user?.name?.split(' ')[0] || 'User'} 👋`}
         subtitle="Here's what's happening across your workspace"
       />
 

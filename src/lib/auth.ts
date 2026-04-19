@@ -14,12 +14,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        console.log('[AUTH] Authorize attempt for:', credentials?.email)
         const parsed = z.object({
           email: z.string().email(),
           password: z.string().min(1),
         }).safeParse(credentials)
 
-        if (!parsed.success) return null
+        if (!parsed.success) {
+          console.log('[AUTH] Parsing failed for:', credentials?.email)
+          return null
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },
@@ -30,13 +34,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         })
 
-        if (!user || !user.isActive) return null
-        if (user.deletedAt) return null
+        if (!user) {
+          console.log('[AUTH] User not found or connection error for:', parsed.data.email)
+          return null
+        }
+
+        if (!user.isActive) {
+          console.log('[AUTH] User is inactive:', parsed.data.email)
+          return null
+        }
+
+        if (user.deletedAt) {
+          console.log('[AUTH] User is soft-deleted:', parsed.data.email)
+          return null
+        }
 
         const valid = await bcrypt.compare(parsed.data.password, user.password)
-        if (!valid) return null
+        if (!valid) {
+          console.log('[AUTH] Password invalid for:', parsed.data.email)
+          return null
+        }
 
-        return {
+        const authUser = {
           id: user.id,
           name: user.name,
           email: user.email,
@@ -44,6 +63,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           roleName: user.role.name,
           permissions: user.role.permissions,
         }
+        console.log('[AUTH] Login successful for:', authUser.email)
+        return authUser
       }
     })
   ],
